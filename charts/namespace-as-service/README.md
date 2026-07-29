@@ -2,7 +2,7 @@
 
 Multitenant Namespace-as-a-Service — workload namespaces, optional devops with namespaced Argo CD and Tekton RBAC, k* instance-size quotas.
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 1.0.1-rc.1](https://img.shields.io/badge/Version-1.0.1--rc.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.1-rc.1](https://img.shields.io/badge/AppVersion-1.0.1--rc.1-informational?style=flat-square)
 
 ## Install
 
