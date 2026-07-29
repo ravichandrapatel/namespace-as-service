@@ -1,0 +1,57 @@
+
+suite: tekton rbac
+templates:
+  - tekton-rbac.yaml
+tests:
+  - it: creates pipeline SA when enabled
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+        - name: test-uat
+      argocd:
+        enabled: false
+      tekton:
+        enabled: true
+    asserts:
+      - equal:
+          path: kind
+          value: ServiceAccount
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: pipeline
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: test-devops
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: tekton-pipeline
+        documentIndex: 1
+      - equal:
+          path: metadata.name
+          value: devops-deploy
+        documentIndex: 3
+      - equal:
+          path: metadata.namespace
+          value: test-dev
+        documentIndex: 3
+      - equal:
+          path: metadata.namespace
+          value: test-uat
+        documentIndex: 5
+
+  - it: creates nothing when tekton disabled
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

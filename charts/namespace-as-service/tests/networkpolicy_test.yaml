@@ -1,0 +1,64 @@
+
+suite: networkpolicy
+templates:
+  - networkpolicy.yaml
+tests:
+  - it: creates NP per workload and devops when devops enabled
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+        - name: test-uat
+      argocd:
+        enabled: false
+      tekton:
+        enabled: true
+    asserts:
+      - hasDocuments:
+          count: 3
+      - equal:
+          path: metadata.namespace
+          value: test-dev
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: test-uat
+        documentIndex: 1
+      - equal:
+          path: metadata.namespace
+          value: test-devops
+        documentIndex: 2
+
+  - it: allows ingress from devops into workload namespaces
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: true
+    asserts:
+      - contains:
+          path: spec.ingress[0].from
+          content:
+            namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: test-devops
+        documentIndex: 0
+
+  - it: skips devops NP when both flags false
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.namespace
+          value: test-dev

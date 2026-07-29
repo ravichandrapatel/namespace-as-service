@@ -1,0 +1,49 @@
+{{- include "namespace-as-service.validate" . }}
+{{- range .Values.namespaces }}
+{{- $cfg := . }}
+{{- $size := include "namespace-as-service.resolveInstanceSize" (dict "root" $ "cfg" $cfg) }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $cfg.name }}
+  labels:
+    {{- include "namespace-as-service.labels" $ | nindent 4 }}
+    naas.devzero.io/tenant: {{ $.Values.tenant | quote }}
+    naas.devzero.io/role: workload
+    naas.devzero.io/instance-size: {{ $size | quote }}
+    kubernetes.io/metadata.name: {{ $cfg.name }}
+    {{- with $.Values.namespaceDefaults.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with $cfg.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- $ann := merge (dict) ($.Values.namespaceDefaults.annotations | default dict) ($cfg.annotations | default dict) }}
+  {{- with $ann }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- if eq (include "namespace-as-service.devopsEnabled" .) "true" }}
+{{- $devopsCfg := .Values.devops | default dict }}
+{{- $size := include "namespace-as-service.resolveInstanceSize" (dict "root" . "cfg" $devopsCfg) }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ include "namespace-as-service.devopsNamespace" . }}
+  labels:
+    {{- include "namespace-as-service.labels" . | nindent 4 }}
+    naas.devzero.io/tenant: {{ .Values.tenant | quote }}
+    naas.devzero.io/role: devops
+    naas.devzero.io/instance-size: {{ $size | quote }}
+    kubernetes.io/metadata.name: {{ include "namespace-as-service.devopsNamespace" . }}
+    {{- with .Values.namespaceDefaults.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.namespaceDefaults.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

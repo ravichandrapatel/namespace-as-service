@@ -1,0 +1,52 @@
+# FILE_NAME: catalog-info.yaml
+# DESCRIPTION: Backstage catalog entities for the Namespace-as-a-Service project
+# VERSION: 1.0.0
+# AUTHORS: ravichandrapatel
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: namespace-as-service
+  title: Namespace as a Service
+  description: >
+    Multitenant Helm chart that provisions workload namespaces, optional devops
+    with namespaced Argo CD and Tekton RBAC, and k* instance-size quotas.
+  annotations:
+    github.com/project-slug: ravichandrapatel/namespace-as-service
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/source-location: url:https://github.com/ravichandrapatel/namespace-as-service
+  tags:
+    - helm
+    - kubernetes
+    - naas
+    - multi-tenant
+  links:
+    - url: https://github.com/ravichandrapatel/namespace-as-service/releases
+      title: Releases
+      icon: github
+    - url: https://github.com/ravichandrapatel/namespace-as-service/pkgs/container/charts%2Fnamespace-as-service
+      title: OCI chart
+spec:
+  type: service
+  lifecycle: production
+  owner: group:default/platform
+  system: namespace-platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: namespace-platform
+  title: Namespace Platform
+  description: Platform capabilities for tenant Kubernetes namespaces
+spec:
+  owner: group:default/platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: namespace-as-service-templates
+  description: Backstage scaffolder templates for Namespace-as-a-Service
+spec:
+  type: url
+  targets:
+    - ./templates/namespace-as-service/template.yaml

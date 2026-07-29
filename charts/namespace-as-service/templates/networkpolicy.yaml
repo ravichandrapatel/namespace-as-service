@@ -1,0 +1,84 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- $devopsName := include "namespace-as-service.devopsNamespace" . }}
+{{- $devopsOn := eq (include "namespace-as-service.devopsEnabled" .) "true" }}
+{{- range .Values.namespaces }}
+{{- $cfg := . }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ printf "%s-default" $cfg.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ $cfg.name }}
+  labels:
+    {{- include "namespace-as-service.labels" $ | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    {{- toYaml $.Values.networkPolicy.policyTypes | nindent 4 }}
+  {{- if $.Values.networkPolicy.allowIngressFromSameNamespace }}
+  ingress:
+    - from:
+        - podSelector: {}
+      {{- if $devopsOn }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $devopsName }}
+      {{- end }}
+  {{- else if $devopsOn }}
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $devopsName }}
+  {{- end }}
+  {{- if $.Values.networkPolicy.allowAllEgress }}
+  egress:
+    - {}
+  {{- else }}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+  {{- end }}
+{{- end }}
+{{- if $devopsOn }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ printf "%s-default" $devopsName | trunc 63 | trimSuffix "-" }}
+  namespace: {{ $devopsName }}
+  labels:
+    {{- include "namespace-as-service.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    {{- toYaml .Values.networkPolicy.policyTypes | nindent 4 }}
+  {{- if .Values.networkPolicy.allowIngressFromSameNamespace }}
+  ingress:
+    - from:
+        - podSelector: {}
+  {{- end }}
+  {{- if .Values.networkPolicy.allowAllEgress }}
+  egress:
+    - {}
+  {{- else }}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+  {{- end }}
+{{- end }}
+{{- end }}

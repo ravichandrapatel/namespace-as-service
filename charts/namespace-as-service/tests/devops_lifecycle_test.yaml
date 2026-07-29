@@ -1,0 +1,61 @@
+
+suite: devops lifecycle
+templates:
+  - namespaces.yaml
+tests:
+  - it: does not create devops namespace when both flags false
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: test-dev
+      - notEqual:
+          path: metadata.name
+          value: test-devops
+
+  - it: creates devops when tekton enabled and argocd disabled
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: true
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: test-devops
+        documentIndex: 1
+      - equal:
+          path: metadata.labels["naas.devzero.io/role"]
+          value: devops
+        documentIndex: 1
+
+  - it: creates devops when argocd enabled and tekton disabled
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: true
+      tekton:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: test-devops
+        documentIndex: 1

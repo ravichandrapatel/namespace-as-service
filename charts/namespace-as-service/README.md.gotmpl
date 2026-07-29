@@ -1,0 +1,41 @@
+# {{ template "chart.name" . }}
+
+{{ template "chart.description" . }}
+
+{{/* shields.io uses "-" as a field separator; escape literal hyphens as "--" */}}
+![Version: {{ .Version }}](https://img.shields.io/badge/Version-{{ .Version | replace "-" "--" }}-informational?style=flat-square) ![Type: {{ .Type }}](https://img.shields.io/badge/Type-{{ .Type }}-informational?style=flat-square) ![AppVersion: {{ .AppVersion }}](https://img.shields.io/badge/AppVersion-{{ .AppVersion | replace "-" "--" }}-informational?style=flat-square)
+
+## Install
+
+```bash
+# Package from GitHub Packages (OCI)
+helm install my-tenant oci://ghcr.io/ravichandrapatel/charts/namespace-as-service \
+  --version <ver> -n <tenant>-devops --create-namespace -f values.yaml
+
+# From this repo
+helm dependency update charts/namespace-as-service
+helm upgrade --install my-tenant ./charts/namespace-as-service \
+  -n <tenant>-devops --create-namespace -f values.yaml
+```
+
+When `argocd.enabled=true`, install the release **into** `{tenant}-devops` so the namespaced Argo CD lands there.
+
+## Features
+
+- Multiple workload namespaces per tenant (`namespaces[].name`)
+- Optional `{tenant}-devops` when `argocd.enabled` or `tekton.enabled`
+- Default ResourceQuota/LimitRange from `instanceSize` (`kgen.medium`); presets live in `templates/_sizes.tpl` (not values)
+- Optional per-NS `resourceQuota.hard` / `custom` overrides only when needed
+- Hardcoded tenant Roles (groups via `groups` list only) — no ResourceQuota/LimitRange mutate
+- Namespaced Argo CD (subchart) + Tekton pipeline SA/RBAC toggles
+
+## Unit tests
+
+```bash
+helm dependency update charts/namespace-as-service
+helm unittest charts/namespace-as-service --with-subchart=false
+```
+
+## Values
+
+{{ template "chart.valuesSection" . }}

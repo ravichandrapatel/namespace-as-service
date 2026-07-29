@@ -1,0 +1,42 @@
+# FILE_NAME: catalog-info.yaml
+# DESCRIPTION: Backstage catalog entity for a NaaS tenant GitOps repo
+# VERSION: 1.0.0
+# AUTHORS: ravichandrapatel
+
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ${{ values.tenant | dump }}
+  title: ${{ values.tenant | dump }} namespaces
+  description: Namespace-as-a-Service tenant ${{ values.tenant | dump }}
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - naas
+    - kubernetes
+    - helm
+spec:
+  type: kubernetes-namespace
+  owner: ${{ values.owner | dump }}
+  system: ${{ values.system | dump }}
+  dependsOn:
+    - component:default/namespace-as-service
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name | dump }}
+  title: ${{ values.tenant | dump }} NaaS
+  description: GitOps values for Namespace-as-a-Service tenant ${{ values.tenant | dump }}
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - naas
+    - gitops
+spec:
+  type: website
+  lifecycle: production
+  owner: ${{ values.owner | dump }}
+  system: ${{ values.system | dump }}
+  dependsOn:
+    - component:default/namespace-as-service

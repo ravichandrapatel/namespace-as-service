@@ -1,0 +1,26 @@
+Namespace-as-a-Service ({{ .Chart.Name }}-{{ .Chart.Version }})
+
+Tenant: {{ .Values.tenant }}
+Workload namespaces:
+{{- range .Values.namespaces }}
+  - {{ .name }} (size={{ include "namespace-as-service.resolveInstanceSize" (dict "root" $ "cfg" .) }})
+{{- end }}
+{{- if eq (include "namespace-as-service.devopsEnabled" .) "true" }}
+Devops namespace: {{ include "namespace-as-service.devopsNamespace" . }}
+  argocd.enabled={{ .Values.argocd.enabled }}
+  tekton.enabled={{ .Values.tekton.enabled }}
+{{- if .Values.argocd.enabled }}
+
+Argo CD is a namespaced install. Install/upgrade this release INTO the devops namespace:
+
+  helm upgrade --install {{ .Release.Name }} . \
+    -n {{ include "namespace-as-service.devopsNamespace" . }} --create-namespace \
+    -f your-values.yaml \
+    --set "argocd.configs.params.controller\.namespaces={{ include "namespace-as-service.workloadNames" . }},{{ include "namespace-as-service.devopsNamespace" . }}"
+{{- end }}
+{{- else }}
+Devops namespace: not created (argocd.enabled and tekton.enabled are both false)
+{{- end }}
+
+Tenant Role rules are hardcoded (no rbac.rules in values). Groups bind via values.groups only.
+ResourceQuota/LimitRange are chart-managed; tenant groups have read-only access.

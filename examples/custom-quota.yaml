@@ -1,0 +1,53 @@
+# Full custom ResourceQuota (default t-shirt preset is NOT applied)
+tenant: analytics
+
+namespaces:
+  # Default kgen.medium preset
+  - name: analytics-dev
+
+  # Entirely custom quota — no preset merge
+  - name: analytics-uat
+    instanceSize: custom
+    resourceQuota:
+      hard:
+        requests.cpu: "3"
+        requests.memory: 6Gi
+        limits.cpu: "6"
+        limits.memory: 12Gi
+        pods: "25"
+        services: "15"
+        persistentvolumeclaims: "8"
+    limitRange:
+      limits:
+        - type: Container
+          defaultRequest:
+            cpu: 100m
+            memory: 128Mi
+          default:
+            cpu: 500m
+            memory: 512Mi
+          max:
+            cpu: "2"
+            memory: 4Gi
+
+  # Same replace semantics with an explicit flag (keeps a size label if you want)
+  # - name: analytics-perf
+  #   instanceSize: kgen.medium   # label only when replace: true
+  #   resourceQuota:
+  #     replace: true
+  #     hard:
+  #       requests.cpu: "5"
+  #       requests.memory: 10Gi
+  #       limits.cpu: "10"
+  #       limits.memory: 20Gi
+  #       pods: "40"
+  #       services: "10"
+  #       persistentvolumeclaims: "10"
+
+groups:
+  - analytics-admins
+
+argocd:
+  enabled: false
+tekton:
+  enabled: false

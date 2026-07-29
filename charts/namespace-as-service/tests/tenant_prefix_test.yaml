@@ -1,0 +1,71 @@
+suite: single tenant namespace prefix
+templates:
+  - namespaces.yaml
+tests:
+  - it: accepts matching tenant-prefixed namespaces
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+        - name: test-uat
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: rejects mixed tenant prefixes in one release
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+        - name: payments-uat
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorPattern: must start with "test-"
+
+  - it: rejects empty env suffix after tenant prefix
+    set:
+      tenant: test
+      namespaces:
+        - name: "test-"
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorPattern: must include an env suffix
+
+  - it: rejects listing reserved devops namespace
+    set:
+      tenant: test
+      namespaces:
+        - name: test-devops
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorPattern: reserved
+
+  - it: rejects duplicate namespace names
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorPattern: duplicate namespaces

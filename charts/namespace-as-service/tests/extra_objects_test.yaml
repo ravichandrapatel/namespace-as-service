@@ -1,0 +1,47 @@
+suite: extra objects
+templates:
+  - extra-objects.yaml
+tests:
+  - it: renders nothing when extraObjects empty
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+      extraObjects: []
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders map extraObject
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+      extraObjects:
+        - apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: tenant-extras
+            namespace: test-dev
+          data:
+            hello: world
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: kind
+          value: ConfigMap
+      - equal:
+          path: metadata.name
+          value: tenant-extras
+      - equal:
+          path: data.hello
+          value: world

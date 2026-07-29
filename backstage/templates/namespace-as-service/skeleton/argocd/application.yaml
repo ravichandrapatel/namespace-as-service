@@ -1,0 +1,39 @@
+# FILE_NAME: application.yaml
+# DESCRIPTION: Optional Argo CD Application for the NaaS Helm chart (OCI)
+# VERSION: 1.0.0
+# AUTHORS: ravichandrapatel
+#
+# INTENT: Point cluster Argo CD at the published chart and this repo's values.yaml.
+# Replace GITOPS_REPO_URL with the HTTPS clone URL of this repository after scaffold.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${{ values.tenant }}-naas
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    tenant: ${{ values.tenant | dump }}
+    app.kubernetes.io/managed-by: backstage
+spec:
+  project: default
+  sources:
+    - repoURL: ghcr.io/ravichandrapatel/charts
+      chart: namespace-as-service
+      targetRevision: ${{ values.chartVersion | dump }}
+      helm:
+        valueFiles:
+          - $values/values.yaml
+    - repoURL: GITOPS_REPO_URL
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ${{ values.tenant }}-devops
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

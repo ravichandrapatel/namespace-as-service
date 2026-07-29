@@ -1,0 +1,15 @@
+# Example: workload namespaces only (no devops / Argo / Tekton)
+tenant: payments
+
+namespaces:
+  - name: payments-dev
+  - name: payments-uat
+
+groups:
+  - payments-admins
+
+argocd:
+  enabled: false
+
+tekton:
+  enabled: false

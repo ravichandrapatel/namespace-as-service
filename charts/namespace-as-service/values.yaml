@@ -1,0 +1,143 @@
+# Default values for namespace-as-service.
+# This is a YAML-formatted file.
+
+# -- Tenant / product id. All namespaces[].name MUST start with "<tenant>-".
+# Devops namespace is always "<tenant>-devops" when argocd/tekton is enabled.
+tenant: ""
+
+# -- T-shirt size selector only (presets are hardcoded in templates/_sizes.tpl).
+# Valid: kgen|km|kc|kgpu × medium|large|xlarge|2xlarge|4xlarge, or custom (+ resourceQuota.hard).
+instanceSize: kgen.medium
+
+# -- Workload namespaces (list of objects). Default: preset from instanceSize.
+# Partial overlay: set resourceQuota.hard keys to merge onto the preset.
+# Full custom (no default preset): instanceSize: custom  OR  resourceQuota.replace: true
+#   and provide the complete resourceQuota.hard map (and limitRange.limits if limitRange.enabled).
+namespaces: []
+# - name: test-dev
+# - name: test-uat
+#   instanceSize: km.large
+#   resourceQuota:
+#     hard:
+#       pods: "40"            # merge onto km.large
+# - name: test-special
+#   instanceSize: custom     # OR resourceQuota.replace: true
+#   resourceQuota:
+#     hard:                  # full map — preset NOT applied
+#       requests.cpu: "3"
+#       requests.memory: 6Gi
+#       limits.cpu: "6"
+#       limits.memory: 12Gi
+#       pods: "25"
+#       services: "10"
+#       persistentvolumeclaims: "5"
+#   limitRange:
+#     limits: []             # required when custom/replace and limitRange.enabled
+
+# -- Labels/annotations merged into every Namespace (workload + devops)
+namespaceDefaults:
+  labels: {}
+  annotations: {}
+
+# -- Entra / Okta / AD group names bound to hardcoded tenant Roles (all workload NS + devops)
+groups: []
+# - test-admins
+# - platform-operators
+
+resourceQuota:
+  # -- Create ResourceQuota objects
+  enabled: true
+
+limitRange:
+  # -- Create LimitRange objects
+  enabled: true
+
+networkPolicy:
+  # -- Create NetworkPolicy objects
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  allowAllEgress: true
+  allowIngressFromSameNamespace: true
+
+devops:
+  # -- Optional overrides for the auto-created {{tenant}}-devops namespace
+  instanceSize: ""
+  resourceQuota:
+    hard: {}
+    custom: {}
+  limitRange:
+    limits: []
+    customLimits: []
+
+argocd:
+  # -- Install namespaced Argo CD into devops (subchart alias; all Argo settings live here)
+  enabled: true
+  # Upstream argo-cd chart values (passed via dependency alias "argocd")
+  fullnameOverride: argocd
+  createClusterRoles: false
+  crds:
+    install: true
+  redis-ha:
+    enabled: false
+  controller:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  server:
+    replicas: 1
+    ingress:
+      enabled: false
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+  repoServer:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+  applicationSet:
+    replicas: 1
+  notifications:
+    enabled: false
+  dex:
+    enabled: false
+
+tekton:
+  # -- Create Tekton pipeline SA and RoleBindings (devops + deploy into each workload NS)
+  enabled: true
+  serviceAccount:
+    name: pipeline
+
+# -- Extra Kubernetes manifests to render (tpl-evaluated). Each list item is a full object or multi-doc YAML string.
+extraObjects: []
+# - apiVersion: v1
+#   kind: ConfigMap
+#   metadata:
+#     name: tenant-extras
+#     namespace: test-dev
+#   data:
+#     hello: world
+# - |
+#   apiVersion: v1
+#   kind: Secret
+#   metadata:
+#     name: example
+#     namespace: {{ include "namespace-as-service.devopsNamespace" . }}
+#   type: Opaque
+#   stringData:
+#     key: value

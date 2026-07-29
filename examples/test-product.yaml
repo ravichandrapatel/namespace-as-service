@@ -1,0 +1,33 @@
+# Example: product "test" with two envs + devops (Argo CD + Tekton)
+tenant: test
+
+# Global default size for every namespace (override per NS only when needed)
+instanceSize: kgen.medium
+
+namespaces:
+  - name: test-dev
+  - name: test-uat
+    # Optional per-NS override example (commented):
+    # instanceSize: km.large
+    # resourceQuota:
+    #   hard:
+    #     pods: "40"
+
+namespaceDefaults:
+  labels:
+    product: test
+
+groups:
+  - test-admins
+
+argocd:
+  enabled: true
+  # optional: override upstream chart settings under the same key
+  # createClusterRoles: false
+
+tekton:
+  enabled: true
+
+# Optional devops size bump when Argo CD is enabled
+devops:
+  instanceSize: kgen.large

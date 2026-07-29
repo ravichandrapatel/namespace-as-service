@@ -1,0 +1,76 @@
+# FILE_NAME: ci.yaml
+# DESCRIPTION: PR / branch CI — helm lint, unittest, helm-docs drift
+# VERSION: 1.0.0
+# AUTHORS: ravichandrapatel
+
+name: ci
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+      - release/**
+  push:
+    branches:
+      - develop
+      - main
+      - release/**
+
+permissions:
+  contents: read
+
+jobs:
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Helm
+        uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # v4.3.0
+        with:
+          version: v3.17.3
+
+      - name: Dependency update
+        env:
+          CHART: charts/namespace-as-service
+        run: |
+          set -euo pipefail
+          helm dependency update "${CHART}"
+
+      - name: Helm lint
+        env:
+          CHART: charts/namespace-as-service
+        run: |
+          set -euo pipefail
+          helm lint "${CHART}" --set tenant=test --set namespaces[0].name=test-dev \
+            --set argocd.enabled=false --set tekton.enabled=false
+
+      - name: Install helm-unittest
+        run: |
+          set -euo pipefail
+          helm plugin install https://github.com/helm-unittest/helm-unittest --version v0.8.0
+
+      - name: Helm unittest
+        env:
+          CHART: charts/namespace-as-service
+        run: |
+          set -euo pipefail
+          helm unittest "${CHART}" --with-subchart=false
+
+      - name: Install helm-docs
+        env:
+          HELM_DOCS_VERSION: "1.14.2"
+        run: |
+          set -euo pipefail
+          curl -sL "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz" \
+            | tar xz -C /tmp helm-docs
+          sudo mv /tmp/helm-docs /usr/local/bin/helm-docs
+          helm-docs --version
+
+      - name: Verify helm-docs is up to date
+        run: |
+          set -euo pipefail
+          helm-docs -c charts/namespace-as-service -t charts/namespace-as-service/README.md.gotmpl
+          git diff --exit-code -- charts/namespace-as-service/README.md

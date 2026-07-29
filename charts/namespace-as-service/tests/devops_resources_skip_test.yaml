@@ -1,0 +1,19 @@
+
+suite: devops resources skip
+templates:
+  - tekton-rbac.yaml
+  - argocd-appproject.yaml
+  - argocd-workload-rbac.yaml
+tests:
+  - it: skips tekton and argocd parent resources when both false
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

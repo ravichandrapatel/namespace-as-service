@@ -1,0 +1,40 @@
+suite: limitrange
+templates:
+  - limitrange.yaml
+tests:
+  - it: applies default kgen.medium limitrange
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: spec.limits[0].type
+          value: Container
+      - equal:
+          path: spec.limits[0].max.cpu
+          value: "1"
+      - equal:
+          path: spec.limits[0].max.memory
+          value: 1Gi
+
+  - it: uses larger max for km.large
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+          instanceSize: km.large
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.limits[0].max.memory
+          value: 8Gi

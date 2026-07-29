@@ -1,0 +1,133 @@
+
+suite: resourcequota overrides
+templates:
+  - resourcequota.yaml
+tests:
+  - it: merges per-namespace instanceSize hard and custom
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+        - name: test-uat
+          instanceSize: km.large
+          resourceQuota:
+            hard:
+              pods: "40"
+            custom:
+              count/jobs.batch: "20"
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.hard.pods
+          value: "10"
+        documentIndex: 0
+      - equal:
+          path: spec.hard.pods
+          value: "40"
+        documentIndex: 1
+      - equal:
+          path: spec.hard["requests.memory"]
+          value: 16Gi
+        documentIndex: 1
+      - equal:
+          path: spec.hard["count/jobs.batch"]
+          value: "20"
+        documentIndex: 1
+
+  - it: applies devops override independently
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: true
+      devops:
+        instanceSize: kgen.large
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.namespace
+          value: test-dev
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: test-devops
+        documentIndex: 1
+      - equal:
+          path: spec.hard["requests.cpu"]
+          value: "1"
+        documentIndex: 0
+      - equal:
+          path: spec.hard["requests.cpu"]
+          value: "2"
+        documentIndex: 1
+
+  - it: replaces preset entirely with instanceSize custom
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+          instanceSize: custom
+          resourceQuota:
+            hard:
+              requests.cpu: "3"
+              requests.memory: 6Gi
+              limits.cpu: "6"
+              limits.memory: 12Gi
+              pods: "25"
+              services: "15"
+              persistentvolumeclaims: "8"
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.hard["requests.cpu"]
+          value: "3"
+      - equal:
+          path: spec.hard.pods
+          value: "25"
+      - isNull:
+          path: spec.hard["requests.nvidia.com/gpu"]
+
+  - it: replaces preset with resourceQuota.replace true
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+          instanceSize: kgen.medium
+          resourceQuota:
+            replace: true
+            hard:
+              requests.cpu: "5"
+              requests.memory: 10Gi
+              limits.cpu: "10"
+              limits.memory: 20Gi
+              pods: "40"
+              services: "10"
+              persistentvolumeclaims: "10"
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.hard["requests.cpu"]
+          value: "5"
+      - equal:
+          path: spec.hard["requests.memory"]
+          value: 10Gi
+      - equal:
+          path: spec.hard.pods
+          value: "40"
+      # kgen.medium default pods is 10 — must not appear as leftover merge
+      - notEqual:
+          path: spec.hard.pods
+          value: "10"

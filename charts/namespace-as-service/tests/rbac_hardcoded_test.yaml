@@ -1,0 +1,55 @@
+
+suite: hardcoded tenant rbac
+templates:
+  - role-tenant.yaml
+tests:
+  - it: creates tenant-admin role with read-only quota rules
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      groups:
+        - test-admins
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - isKind:
+          of: Role
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: tenant-admin
+        documentIndex: 0
+      - contains:
+          path: rules
+          content:
+            apiGroups: [""]
+            resources: ["resourcequotas", "limitranges"]
+            verbs: ["get", "list", "watch"]
+        documentIndex: 0
+
+  - it: binds groups in workload namespace
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      groups:
+        - test-admins
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - isKind:
+          of: RoleBinding
+        documentIndex: 1
+      - equal:
+          path: subjects[0].name
+          value: test-admins
+        documentIndex: 1
+      - equal:
+          path: roleRef.name
+          value: tenant-admin
+        documentIndex: 1

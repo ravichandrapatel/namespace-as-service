@@ -1,0 +1,67 @@
+
+suite: argocd toggle
+templates:
+  - argocd-appproject.yaml
+  - argocd-workload-rbac.yaml
+tests:
+  - it: skips parent argocd resources when disabled
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+      argocd:
+        enabled: false
+      tekton:
+        enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: creates AppProject when enabled
+    template: argocd-appproject.yaml
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+        - name: test-uat
+      argocd:
+        enabled: true
+      tekton:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: kind
+          value: AppProject
+      - equal:
+          path: metadata.namespace
+          value: test-devops
+      - equal:
+          path: metadata.name
+          value: default
+
+  - it: creates argocd deploy roles in workload namespaces
+    template: argocd-workload-rbac.yaml
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+        - name: test-uat
+      argocd:
+        enabled: true
+      tekton:
+        enabled: false
+    asserts:
+      - equal:
+          path: metadata.name
+          value: argocd-deploy
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: test-dev
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: test-uat
+        documentIndex: 2

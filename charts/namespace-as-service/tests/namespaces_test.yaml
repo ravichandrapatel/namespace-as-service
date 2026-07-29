@@ -1,0 +1,45 @@
+
+suite: workload namespaces
+templates:
+  - namespaces.yaml
+tests:
+  - it: creates all listed workload namespaces with labels
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+        - name: test-uat
+      namespaceDefaults:
+        labels:
+          product: test
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: test-dev
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: test-uat
+        documentIndex: 1
+      - equal:
+          path: metadata.labels["naas.devzero.io/tenant"]
+          value: test
+        documentIndex: 0
+      - equal:
+          path: metadata.labels["naas.devzero.io/role"]
+          value: workload
+        documentIndex: 0
+      - equal:
+          path: metadata.labels.product
+          value: test
+        documentIndex: 0
+      - equal:
+          path: metadata.labels["naas.devzero.io/instance-size"]
+          value: kgen.medium
+        documentIndex: 0

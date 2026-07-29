@@ -1,0 +1,9 @@
+# FILE_NAME: CODEOWNERS
+# DESCRIPTION: Owner-only code ownership — required on PRs to main/develop
+# VERSION: 1.1.0
+# AUTHORS: ravichandrapatel
+#
+# All paths require review from the repository owner.
+# Owner may bypass branch rulesets (merge without approval).
+
+* @ravichandrapatel

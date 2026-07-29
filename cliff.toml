@@ -1,0 +1,72 @@
+# FILE_NAME: cliff.toml
+# DESCRIPTION: git-cliff config — Keep a Changelog style from conventional commits
+# VERSION: 1.0.0
+# AUTHORS: ravichandrapatel
+
+[changelog]
+header = """
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+"""
+body = """
+{% if version %}\
+## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+## [Unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group }}
+{% for commit in commits %}
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}{{ commit.message | split(pat="\n") | first | trim | upper_first }}
+{% endfor %}
+{% endfor %}
+
+"""
+footer = """
+{% for release in releases -%}
+{% if release.version -%}
+{% if release.previous.version -%}
+[{{ release.version | trim_start_matches(pat="v") }}]: https://github.com/ravichandrapatel/namespace-as-service/compare/{{ release.previous.version }}...{{ release.version }}
+{% else -%}
+[{{ release.version | trim_start_matches(pat="v") }}]: https://github.com/ravichandrapatel/namespace-as-service/releases/tag/{{ release.version }}
+{% endif -%}
+{% endif -%}
+{% endfor %}
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = false
+split_commits = false
+commit_preprocessors = [
+  { pattern = '(?s)\n.*', replace = "" },
+]
+commit_parsers = [
+  { message = "\\[skip-release\\]", skip = true },
+  { message = "^feat", group = "Added" },
+  { message = "^fix", group = "Fixed" },
+  { message = "^perf", group = "Changed" },
+  { message = "^refactor", group = "Changed" },
+  { message = "^docs", group = "Changed" },
+  { message = "^style", skip = true },
+  { message = "^test", skip = true },
+  { message = "^chore\\(release\\)", skip = true },
+  { message = "^chore\\(deps\\)", group = "Changed" },
+  { message = "^chore", group = "Changed" },
+  { message = "^ci", skip = true },
+  { message = "^build", skip = true },
+  { message = ".*", group = "Changed" },
+]
+protect_breaking_commits = false
+filter_commits = false
+tag_pattern = "v[0-9].*"
+ignore_tags = ""
+topo_order = false
+sort_commits = "newest"
+skip_tags = ""

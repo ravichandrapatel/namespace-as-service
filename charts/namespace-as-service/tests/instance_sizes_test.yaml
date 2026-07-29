@@ -1,0 +1,71 @@
+suite: instance size presets
+templates:
+  - resourcequota.yaml
+tests:
+  - it: uses km.large preset
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+          instanceSize: km.large
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.hard["requests.memory"]
+          value: 16Gi
+      - equal:
+          path: spec.hard["limits.memory"]
+          value: 32Gi
+
+  - it: uses kc.xlarge preset
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+          instanceSize: kc.xlarge
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.hard["requests.cpu"]
+          value: "16"
+      - equal:
+          path: spec.hard["limits.cpu"]
+          value: "32"
+
+  - it: uses kgpu.medium with gpu keys
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+          instanceSize: kgpu.medium
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.hard["requests.nvidia.com/gpu"]
+          value: "1"
+      - equal:
+          path: spec.hard["limits.nvidia.com/gpu"]
+          value: "1"
+
+  - it: fails custom without hard map
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+          instanceSize: custom
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorPattern: resourceQuota.replace / instanceSize custom requires resourceQuota.hard

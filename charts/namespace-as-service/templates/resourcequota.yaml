@@ -1,0 +1,34 @@
+{{- if .Values.resourceQuota.enabled }}
+{{- range .Values.namespaces }}
+{{- $cfg := . }}
+{{- $hard := include "namespace-as-service.quotaHard" (dict "root" $ "cfg" $cfg) }}
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ printf "%s-quota" $cfg.name | trunc 63 | trimSuffix "-" }}
+  namespace: {{ $cfg.name }}
+  labels:
+    {{- include "namespace-as-service.labels" $ | nindent 4 }}
+    naas.devzero.io/tenant: {{ $.Values.tenant | quote }}
+spec:
+  hard:
+    {{- $hard | nindent 4 }}
+{{- end }}
+{{- if eq (include "namespace-as-service.devopsEnabled" .) "true" }}
+{{- $devopsCfg := .Values.devops | default dict }}
+{{- $hard := include "namespace-as-service.quotaHard" (dict "root" . "cfg" $devopsCfg) }}
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ printf "%s-quota" (include "namespace-as-service.devopsNamespace" .) | trunc 63 | trimSuffix "-" }}
+  namespace: {{ include "namespace-as-service.devopsNamespace" . }}
+  labels:
+    {{- include "namespace-as-service.labels" . | nindent 4 }}
+    naas.devzero.io/tenant: {{ .Values.tenant | quote }}
+spec:
+  hard:
+    {{- $hard | nindent 4 }}
+{{- end }}
+{{- end }}

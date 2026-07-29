@@ -1,0 +1,38 @@
+
+suite: resourcequota defaults
+templates:
+  - resourcequota.yaml
+tests:
+  - it: applies kgen.medium hard quota by default
+    set:
+      tenant: test
+      namespaces:
+        - name: test-dev
+        - name: test-uat
+      argocd:
+        enabled: false
+      tekton:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: spec.hard["requests.cpu"]
+          value: "1"
+        documentIndex: 0
+      - equal:
+          path: spec.hard["requests.memory"]
+          value: 2Gi
+        documentIndex: 0
+      - equal:
+          path: spec.hard.pods
+          value: "10"
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: test-dev
+        documentIndex: 0
+      - equal:
+          path: metadata.namespace
+          value: test-uat
+        documentIndex: 1

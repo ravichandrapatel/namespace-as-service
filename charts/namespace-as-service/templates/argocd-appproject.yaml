@@ -1,0 +1,34 @@
+{{- if .Values.argocd.enabled }}
+{{- $devopsName := include "namespace-as-service.devopsNamespace" . }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: default
+  namespace: {{ $devopsName }}
+  labels:
+    {{- include "namespace-as-service.labels" . | nindent 4 }}
+  annotations:
+    # Prefer installing this chart with: helm upgrade --install -n {{ $devopsName }} --create-namespace
+    naas.devzero.io/managed-namespaces: {{ include "namespace-as-service.workloadNames" . }},{{ $devopsName }}
+spec:
+  description: Tenant project for {{ .Values.tenant }}
+  sourceRepos:
+    - "*"
+  destinations:
+    - namespace: {{ $devopsName }}
+      server: https://kubernetes.default.svc
+    {{- range .Values.namespaces }}
+    - namespace: {{ .name }}
+      server: https://kubernetes.default.svc
+    {{- end }}
+  clusterResourceWhitelist: []
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: ResourceQuota
+    - group: ""
+      kind: LimitRange
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+{{- end }}
