@@ -4,7 +4,6 @@
 ![Version](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square)
 ![Type](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
-
 Multitenant **Namespace-as-a-Service** Helm chart for Kubernetes.
 
 One release provisions **one tenant only**:
@@ -107,30 +106,6 @@ helm unittest charts/namespace-as-service --with-subchart=false
 helm-docs -c charts/namespace-as-service -t charts/namespace-as-service/README.md.gotmpl
 pre-commit install
 ```
-
-
-
-## Backstage
-
-Software Template (portal form): [`idp-backstage-templates` / `templates/namespace-as-service`](https://github.com/ravichandrapatel/idp-backstage-templates/tree/main/templates/namespace-as-service)
-
-On submit, Backstage opens a PR to [`idp-argocd-apps`](https://github.com/ravichandrapatel/idp-argocd-apps) that adds:
-
-```text
-env/<env>/<clusterName>/<tenant>.yaml
-```
-
-(`namespace` file name = tenant). PRs are auto-merged; ApplicationSet `namespace-as-service` syncs the Helm release.
-
-Register templates:
-
-```yaml
-catalog:
-  locations:
-    - type: url
-      target: https://github.com/ravichandrapatel/idp-backstage-templates/blob/main/catalog-info.yaml
-```
-
 
 ## Access control
 
