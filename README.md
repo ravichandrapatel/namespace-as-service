@@ -112,25 +112,25 @@ pre-commit install
 
 ## Backstage
 
-Scaffold a tenant GitOps repo from the Software Template:
+Software Template (portal form): [`idp-backstage-templates` / `templates/namespace-as-service`](https://github.com/ravichandrapatel/idp-backstage-templates/tree/main/templates/namespace-as-service)
 
-- Template: [`backstage/templates/namespace-as-service/template.yaml`](backstage/templates/namespace-as-service/template.yaml)
-- Catalog: [`catalog-info.yaml`](catalog-info.yaml) → [`backstage/catalog-info.yaml`](backstage/catalog-info.yaml)
+On submit, Backstage opens a PR to [`idp-argocd-apps`](https://github.com/ravichandrapatel/idp-argocd-apps) that adds:
 
-Register in Backstage (`app-config.yaml`):
+```text
+env/<env>/<clusterName>/<tenant>.yaml
+```
+
+(`namespace` file name = tenant). PRs are auto-merged; ApplicationSet `namespace-as-service` syncs the Helm release.
+
+Register templates:
 
 ```yaml
 catalog:
   locations:
     - type: url
-      target: https://github.com/ravichandrapatel/namespace-as-service/blob/develop/backstage/templates/namespace-as-service/template.yaml
-      rules:
-        - allow: [Template]
-    - type: url
-      target: https://github.com/ravichandrapatel/namespace-as-service/blob/develop/catalog-info.yaml
+      target: https://github.com/ravichandrapatel/idp-backstage-templates/blob/main/catalog-info.yaml
 ```
 
-The template collects tenant, environments, instance size, groups, Argo CD / Tekton toggles, then publishes a GitHub repo with `values.yaml`, optional Argo CD `Application`, and catalog entities.
 
 ## Access control
 
