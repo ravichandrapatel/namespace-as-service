@@ -1,6 +1,0 @@
-site_name: ${{ values.tenant }}-naas
-site_description: Namespace-as-a-Service tenant ${{ values.tenant }}
-nav:
-  - Home: index.md
-plugins:
-  - techdocs-core

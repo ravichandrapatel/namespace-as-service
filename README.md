@@ -4,7 +4,6 @@
 ![Version](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square)
 ![Type](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
-
 Multitenant **Namespace-as-a-Service** Helm chart for Kubernetes.
 
 One release provisions **one tenant only**:
@@ -107,30 +106,6 @@ helm unittest charts/namespace-as-service --with-subchart=false
 helm-docs -c charts/namespace-as-service -t charts/namespace-as-service/README.md.gotmpl
 pre-commit install
 ```
-
-
-
-## Backstage
-
-Scaffold a tenant GitOps repo from the Software Template:
-
-- Template: [`backstage/templates/namespace-as-service/template.yaml`](backstage/templates/namespace-as-service/template.yaml)
-- Catalog: [`catalog-info.yaml`](catalog-info.yaml) → [`backstage/catalog-info.yaml`](backstage/catalog-info.yaml)
-
-Register in Backstage (`app-config.yaml`):
-
-```yaml
-catalog:
-  locations:
-    - type: url
-      target: https://github.com/ravichandrapatel/namespace-as-service/blob/develop/backstage/templates/namespace-as-service/template.yaml
-      rules:
-        - allow: [Template]
-    - type: url
-      target: https://github.com/ravichandrapatel/namespace-as-service/blob/develop/catalog-info.yaml
-```
-
-The template collects tenant, environments, instance size, groups, Argo CD / Tekton toggles, then publishes a GitHub repo with `values.yaml`, optional Argo CD `Application`, and catalog entities.
 
 ## Access control
 
